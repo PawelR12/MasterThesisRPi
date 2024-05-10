@@ -74,7 +74,7 @@ def main():
         else:
             hour = t_hour
             t_hour = t_hour + 1
-            mont = t_month
+            month = t_month
 
         print("[DATA] Hour: ",int(hour), "Humidity: ", humidity, "Temperature: ", temperature)
 
@@ -113,7 +113,6 @@ def main():
 
             m_PredictedTempHumidity = pf.PredictHoarfrostPossibilityForNext6Hours(m_MyList)
             print("[INFO] Predicted Temp, Humidity for next hours")
-            print(m_PredictedTempHumidity)
             pf.displayPredictedTempHumidity(m_PredictedTempHumidity, hour)
             m_PredictedHoarfrostDanger = pf.calculatePredictedHoarfrostPossibility(m_PredictedTempHumidity)
             print(m_PredictedHoarfrostDanger)
@@ -128,7 +127,7 @@ def main():
                     m_OperationStageFlag = ONE_HOUR_1ST_DATA
             else:
                 if not f_CmdSended:
-                    hw_helper.SendCommandToSTM32(DO_MEASUREMENT_AFTER_9_HOURS)
+                    hw_helper.SendCommandToSTM32(D_PORT, D_BAUDRATE, DO_MEASUREMENT_AFTER_9_HOURS)
                     m_OperationStageFlag = ONE_HOUR_1ST_DATA
 
         elif m_OperationStageFlag == TEN_MINUTES_DATA:
