@@ -15,7 +15,7 @@ rf_model = load('/home/user/Desktop/MasterThesis/program/HoarfrostPrediction.job
 def CalculateCurrentHoarFrostDanger(data):
     temperature = data[2]
     humidity = data[1]
-    prediction = rf_model.predict(np.array([[temperature, humidity]]))
+    prediction = rf_model.predict(np.array([[temperature, humidity]])) * 10
     return prediction[0]
 
 def RawCalculateHoarfrostDanger(humidity, temperature):

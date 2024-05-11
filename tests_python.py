@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import serial
+import crcmod
 
 GREEN_LED = 16
 YELLOW_LED = 20
@@ -50,24 +51,31 @@ def SendCommandToSTM32(port="/dev/ttyUSB0", baudrate=115200):
     print("Send command to STM32")
  
 def main():
-    GpioInit()
-    WriteGreenLED("0")
-    WriteRedLED("0")
-    WriteYellowLED("0")
-    ser = serial.Serial("/dev/ttyUSB0", 115200, timeout = 1) 
-    # SendCommandToSTM32()
-    # Define the command integer
-    cmd = 0xCC00DD
+    # GpioInit()
+    # WriteGreenLED("0")
+    # WriteRedLED("0")
+    # WriteYellowLED("0")
+    # ser = serial.Serial("/dev/ttyUSB0", 115200, timeout = 1) 
+    # # SendCommandToSTM32()
+    # # Define the command integer
+    # cmd = 0xCC00DD
 
-    # Convert the integer to bytes (3 bytes, big-endian format)
-    cmd_bytes = cmd.to_bytes(3, byteorder='big')
-    ser.write(cmd_bytes) 
+    # # Convert the integer to bytes (3 bytes, big-endian format)
+    # cmd_bytes = cmd.to_bytes(3, byteorder='big')
+    # ser.write(cmd_bytes) 
     
-    ser.write(b'Hello\n')
-    ser.write(0xCC00DD)
+    # ser.write(b'Hello\n')
+    # ser.write(0xCC00DD)
     
-    ser.write(cmd)
-    print("Send command to STM32")
-    
+    # ser.write(cmd)
+    # print("Send command to STM32")
+
+    print("Test crc")
+    data = 0xDDDDDDDDDDDDDDDDDDDD
+    data = data.to_bytes(10, 'big')
+    crc32 = crcmod.mkCrcFun(poly=0x104c11db7, rev=False, initCrc=0xFFFFFFFF, xorOut=0)
+    crc = crc32(data)
+    crc_bytes = crc.to_bytes(4, 'big') #Big or little Endian
+
 if __name__ == "__main__":
     main()

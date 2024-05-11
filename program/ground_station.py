@@ -51,7 +51,7 @@ def main():
     t_hour = 0
     t_month = 1
 
-    print("Measuring phase -> Turn on Green and Yellow LED")
+    print(BLUE, "[INFO]", RESET, "Measuring phase -> Turn on Green and Yellow LED")
     hw_helper.GpioInit()
     hw_helper.WriteGreenLED("HIGH")
     hw_helper.WriteYellowLED("HIGH")
@@ -64,7 +64,7 @@ def main():
             hour, minutes, month = act_time.split()
             month = int(month)
             if( month > 4 and month < 8):
-                print("During summer hoarfrost prediction is not calculated - termination")
+                print(RED, "[WARNING]", RESET," During summer hoarfrost prediction is not calculated - termination")
                 exit()
         
             hour = int(hour)
@@ -76,33 +76,34 @@ def main():
             t_hour = t_hour + 1
             month = t_month
 
-        print("[DATA] Hour: ",int(hour), "Humidity: ", humidity, "Temperature: ", temperature)
+        print(MAGENTA, "[DATA]", RESET," Hour: ",int(hour), "Humidity: ", humidity, "Temperature: ", temperature)
 
         if m_OperationStageFlag == ONE_HOUR_1ST_DATA:
             m_MyList.clear()
             m_MyList.append([hour, humidity, temperature])
-            print("[INFO] Collected data from first contiguous hour")
+            print(BLUE, "[INFO]",RESET," Collected data from first contiguous hour\n")
             m_OperationStageFlag = ONE_HOUR_2ND_DATA
             hw_helper.SendCommandToSTM32(D_PORT, D_BAUDRATE, DO_MEASUREMENT_AFTER_1_HOUR)
 
         elif m_OperationStageFlag == ONE_HOUR_2ND_DATA:
             m_MyList.append([hour, humidity, temperature])
-            print("Collected data from second contiguous hour")
+            print(BLUE, "[INFO]" ,RESET," Collected data from second contiguous hour\n")
             m_OperationStageFlag = ONE_HOUR_3RD_DATA
             hw_helper.SendCommandToSTM32(D_PORT, D_BAUDRATE, DO_MEASUREMENT_AFTER_1_HOUR)
 
         elif m_OperationStageFlag == ONE_HOUR_3RD_DATA:
-            print("======================")
-            print("Successfully collected data from last 3 hours")
+            print(BLUE, "[INFO]",RESET," Successfully collected data from last 3 hours")
+            print("    ==========PREDICTIONS==========   \n")
+
             m_MyList.append([hour, humidity, temperature])
             m_HoarfrostPossibility = pf.CalculateCurrentHoarFrostDanger(m_MyList[2])
-            print("Current Hoarfrost Possibility is ", m_HoarfrostPossibility)
+            print(GREEN, "[PREDICTION]",RESET," Current Hoarfrost Possibility is ", m_HoarfrostPossibility)
 
             if m_HoarfrostPossibility > HOARFROST_CURRENT_DANGER_LIMIT:
                 hw_helper.WriteRedLED("HIGH")
                 hw_helper.WriteYellowLED("LOW")
                 hw_helper.WriteGreenLED("LOW")
-                print("[WARNING] There is a high danger of hoarfrost possibility")
+                print(RED,"[WARNING]",RESET," There is a high danger of hoarfrost possibility")
                 hw_helper.SendCommandToSTM32(D_PORT, D_BAUDRATE, DO_MEASUREMENT_AFTER_10_MINUTES)
                 f_CmdSended = 1
                 m_OperationStageFlag = TEN_MINUTES_DATA
@@ -112,15 +113,16 @@ def main():
                 hw_helper.WriteGreenLED("LOW")
 
             m_PredictedTempHumidity = pf.PredictHoarfrostPossibilityForNext6Hours(m_MyList)
-            print("[INFO] Predicted Temp, Humidity for next hours")
+            print(GREEN,"[PREDICTION]",RESET," Predicted Temp, Humidity for next 6 hours")
             pf.displayPredictedTempHumidity(m_PredictedTempHumidity, hour)
+            print(GREEN,"[PREDICTION]",RESET," Predicted Hoarfrost for next 6 hours\n")
             m_PredictedHoarfrostDanger = pf.calculatePredictedHoarfrostPossibility(m_PredictedTempHumidity)
             print(m_PredictedHoarfrostDanger)
 
             m_PredictedHoarfrostDanger_SUM = np.sum(m_PredictedHoarfrostDanger)
             m_PredictedHoarfrostDanger_MAX = np.max(m_PredictedHoarfrostDanger)
             if (m_PredictedHoarfrostDanger_SUM/6 > HOARFROST_PREDICTED_DANGER_AVG_LIMIT or m_PredictedHoarfrostDanger_MAX > HOARFROST_PREDICTED_DANGER_MAX_LIMIT ):
-                print("[WARNING] There is a high possibility of hoarfrost accretion in next 6 hours")
+                print(RED,"[WARNING]",RESET," There is a high possibility of hoarfrost accretion in next 6 hours")
                 hw_helper.WriteYellowLED("HIGH")
                 if not f_CmdSended:
                     hw_helper.SendCommandToSTM32(D_PORT, D_BAUDRATE, DO_MEASUREMENT_AFTER_3_HOURS)
