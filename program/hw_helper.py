@@ -2,6 +2,7 @@ from constants import *
 import RPi.GPIO as GPIO
 import time
 import serial
+import crcmod
 
 GREEN_LED = 16
 YELLOW_LED = 20
@@ -22,7 +23,7 @@ def decodeMessage(message):
 def WaitForDataFromSTM32(port, baudrate):
     ser = serial.Serial(port, baudrate, timeout = 1) 
     ser.reset_input_buffer()
-    num_chars = 20
+    num_chars = 24
     while True:
         if ser.in_waiting >= num_chars:
             
@@ -33,9 +34,16 @@ def WaitForDataFromSTM32(port, baudrate):
 
             if(start_byte == STM32_START_BYTES):
                 data = ser.read(num_chars - STM32_START_BYTES_SIZE)
-                message = data.decode('utf-8')
-                print(BLUE, "[INFO]",RESET," Data from stm32 received")
-                break
+                crc_value_from_message = data[19:23]
+                crc_value_from_message = int.from_bytes(crc_value_from_message, byteorder = 'little')
+                message = data[0:18].decode('utf-8')
+                crc32 = crcmod.mkCrcFun(poly=0x104c11db7, rev=False, initCrc=0xFFFFFFFF, xorOut=0)
+                crc = crc32(data[0:18])
+                if(crc_value_from_message != crc):
+                    print(RED, "[WARNING]",RESET," Wrong CRC")
+                if(crc_value_from_message == crc):
+                    print(BLUE, "[INFO]",RESET," Data from stm32 received", message)
+                    break
 
     humidity, temperature = decodeMessage(message)
     return humidity, temperature
